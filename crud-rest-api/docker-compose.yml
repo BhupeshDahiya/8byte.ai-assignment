@@ -1,0 +1,33 @@
+services:
+    node_app:
+        container_name: node_app
+        build:
+            context: .
+        image: jayfronczesko/crud_rest_api
+        ports:
+            - "3000:3000"
+        env_file:
+            - .env
+        depends_on:
+            node_db:
+                condition: service_healthy            
+
+    node_db:
+        container_name: node_db
+        image: postgres:12
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        volumes:
+            - node_db_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U jayfronczesko -d node_rest_db"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    node_db_data: {}
