@@ -1,1 +1,28 @@
 .env
+# Core Terraform directories
+.terraform/
+
+# State files (contains sensitive plain-text secrets)
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Exclude all variable files as they can contain secrets
+*.tfvars
+*.tfvars.json
+
+# Exclude override files (used for local testing changes)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Exclude CLI configuration files
+.terraformrc
+terraform.rc
+
+# Exclude local plan files (if you output plan files locally)
+*.tfplan
