@@ -16,8 +16,8 @@ module "vpc" {
   single_nat_gateway = true
 
   tags = {
-      Project     = var.project_name
-      Environment = var.environment
-      ManagedBy   = "Terraform"
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "Terraform"
   }
 }
