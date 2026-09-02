@@ -1,0 +1,67 @@
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for running manually'
+        required: false
+        default: 'Manual health check'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # run only test db and the run jest tests in temp container and delete it
+      - name: Run tests
+        run: |
+          docker compose -f crud-rest-api/docker-compose.test.yml up -d node_db_test 
+          docker compose -f crud-rest-api/docker-compose.test.yml run --rm node_app_test npm test
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f crud-rest-api/docker-compose.test.yml down -v
+
+  build-push:
+    if: github.event_name == 'push'
+    needs: testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: config aws creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ID }}:role/github-actions-role
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image
+        run: |
+          docker build -t app:${{ github.sha }} ./crud-rest-api
+
+      - name: Tag image
+        run: |
+          docker tag app:${{ github.sha }} \
+            ${{ secrets.AWS_ID }}.dkr.ecr.us-east-1.amazonaws.com/app_repo:${{ github.sha }}
+
+      - name: Push image
+        run: |
+          docker push \
+            ${{ secrets.AWS_ID }}.dkr.ecr.us-east-1.amazonaws.com/app_repo:${{ github.sha }}
