@@ -1,4 +1,3 @@
-.env
 # Core Terraform directories
 .terraform/
 
@@ -26,3 +25,17 @@ terraform.rc
 
 # Exclude local plan files (if you output plan files locally)
 *.tfplan
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Docker
+*.log
