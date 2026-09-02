@@ -5,12 +5,12 @@ A CRUD REST API is an API that allows you to perform CRUD operations (Create, Re
 ## Built With
 What I used to build this:
 
-* Node.js - JavaScript runtime environment
-* Express - Popular Node.js web application framework
-* Postgresql - Powerful open-source relational database system
-* Sequelize - Promise-based Node.js ORM for Postgresql, MySQL, and SQLite
-* Docker - Platform for building, shipping, and running applications in containers
-* Postman - Powerful API testing and development tool
+* Node.js - JavaScript runtime environment.
+* Express - Popular Node.js web application framework.
+* Postgresql - Powerful open-source relational database system.
+* Sequelize - Promise-based Node.js ORM for Postgresql, MySQL, and SQLite.
+* Docker - Platform for building, shipping, and running applications in containers.
+* Postman - Powerful API testing and development tool.
 
 ## To check postgre
 ```bash
