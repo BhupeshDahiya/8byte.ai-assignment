@@ -5,8 +5,8 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 resource "aws_db_instance" "postgressql" {
   allocated_storage      = 10
   engine                 = "postgres"
-  username             = "foo"
-  password             = "foobarbaz"
+  username               = "foo"
+  password               = "foobarbaz"
   engine_version         = "18.4"
   instance_class         = "db.t3.micro"
   skip_final_snapshot    = true
