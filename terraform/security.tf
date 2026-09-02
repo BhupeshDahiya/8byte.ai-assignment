@@ -66,6 +66,14 @@ resource "aws_vpc_security_group_egress_rule" "allow_traffic_to_rds" {
   to_port           = 5432
 }
 
+resource "aws_vpc_security_group_egress_rule" "allow_traffic_to_ssm" {
+  security_group_id = aws_security_group.ec2_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+
 # RDS SG
 
 resource "aws_security_group" "rds_sg" {

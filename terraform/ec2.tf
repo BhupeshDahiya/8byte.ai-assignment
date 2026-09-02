@@ -42,6 +42,7 @@ resource "aws_instance" "ec2_instance" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ssm.name
   user_data              = <<-EOF
+                #!/bin/bash
                 yum update -y
                 yum install -y docker
 
