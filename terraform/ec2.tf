@@ -1,7 +1,7 @@
 # SSM for EC2
 # IAM role assumed by EC2
-resource "aws_iam_role" "ssm" {
-  name = "ec2-ssm-role"
+resource "aws_iam_role" "ssm_ecr_perms" {
+  name = "ec2-ssm-ecr-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -15,14 +15,37 @@ resource "aws_iam_role" "ssm" {
   })
 }
 
+resource "aws_iam_role_policy" "ecr_policy" {
+  name = "ecr-policy"
+  role = aws_iam_role.ssm_ecr_perms.id
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "ssm" {
-  role       = aws_iam_role.ssm.name
+  role       = aws_iam_role.ssm_ecr_perms.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "ssm" {
   name = "ec2-ssm-profile"
-  role = aws_iam_role.ssm.name
+  role = aws_iam_role.ssm_ecr_perms.name
 }
 
 data "aws_ami" "amzn-linux-2023-ami" {
