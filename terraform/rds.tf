@@ -14,7 +14,3 @@ resource "aws_db_instance" "postgressql" {
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
 }
-resource "random_password" "db_password" {
-  length  = 32
-  special = false
-}
