@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@prometheus-io/client": "^0.16.1",
     "express": "^4.18.2",
+    "morgan": "^1.12.0",
     "pg": "^8.10.0",
     "postgres": "^3.3.4",
     "sequelize": "^6.29.1"
