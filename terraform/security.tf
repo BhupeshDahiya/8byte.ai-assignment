@@ -74,6 +74,15 @@ resource "aws_vpc_security_group_egress_rule" "allow_traffic_to_ssm" {
   to_port           = 443
 }
 
+resource "aws_vpc_security_group_egress_rule" "app_to_monitoring_loki" {
+  security_group_id            = aws_security_group.ec2_sg.id
+  referenced_security_group_id = aws_security_group.monitoring_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3100
+  to_port                      = 3100
+}
+
+
 # RDS SG
 
 resource "aws_security_group" "rds_sg" {
@@ -94,4 +103,68 @@ resource "aws_vpc_security_group_ingress_rule" "rds_allow_only_ec2" {
   ip_protocol                  = "tcp"
   from_port                    = 5432
   to_port                      = 5432
+}
+
+# Monitoring SG
+
+resource "aws_security_group" "monitoring_sg" {
+  name   = "monitoring_sg"
+  vpc_id = module.vpc.vpc_id
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+  }
+}
+
+# Allow monitoring EC2 to scrape application metrics
+resource "aws_vpc_security_group_egress_rule" "monitoring_to_app" {
+  security_group_id            = aws_security_group.monitoring_sg.id
+  referenced_security_group_id = aws_security_group.ec2_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3000
+  to_port                      = 3000
+}
+
+# Allow monitoring EC2 to connect to PostgreSQL
+resource "aws_vpc_security_group_egress_rule" "monitoring_to_rds" {
+  security_group_id            = aws_security_group.monitoring_sg.id
+  referenced_security_group_id = aws_security_group.rds_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+}
+
+# Allow monitoring EC2 outbound traffic for Docker/NAT/SSM
+resource "aws_vpc_security_group_egress_rule" "monitoring_outbound" {
+  security_group_id = aws_security_group.monitoring_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+# Allow monitoring EC2 to scrape app metrics
+resource "aws_vpc_security_group_ingress_rule" "app_allow_monitoring" {
+  security_group_id            = aws_security_group.ec2_sg.id
+  referenced_security_group_id = aws_security_group.monitoring_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3000
+  to_port                      = 3000
+}
+
+# Allow monitoring EC2 to scrape PostgreSQL
+resource "aws_vpc_security_group_ingress_rule" "rds_allow_monitoring" {
+  security_group_id            = aws_security_group.rds_sg.id
+  referenced_security_group_id = aws_security_group.monitoring_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+}
+
+resource "aws_vpc_security_group_ingress_rule" "monitoring_allow_loki_from_app" {
+  security_group_id            = aws_security_group.monitoring_sg.id
+  referenced_security_group_id = aws_security_group.ec2_sg.id
+  ip_protocol                  = "tcp"
+  from_port                    = 3100
+  to_port                      = 3100
 }

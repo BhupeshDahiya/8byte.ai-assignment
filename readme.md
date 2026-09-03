@@ -24,3 +24,13 @@ The GitHub Actions OIDC trust policy was initially based on the legacy repositor
 ### there are multiple dependency vulnerabilties in the app I used so the pipeline will explicitly fail hence i have commented out the dependency scan 
 
 ### there are multiple container vulnerabilties in the app I used so the pipeline will explicitly fail hence i have changed exit code for scan to 0 so as to pass the scans 
+
+### SSM port fowarding
+```bash
+aws ssm start-session \
+  --target YOUR_MONITORING_INSTANCE_ID \
+  --document-name AWS-StartPortForwardingSession \
+  --parameters '{"portNumber":["3000"],"localPortNumber":["3000"]}'
+```
+
+### Tried bootstrapping the dashboards but hit the max limit for user data therefore i have the dashboards but ill import them manually

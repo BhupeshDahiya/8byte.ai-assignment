@@ -80,7 +80,67 @@ resource "aws_instance" "ec2_instance" {
                 systemctl enable docker
 
                 usermod -aG docker ec2-user
-                EOF
+                mkdir -p /opt/alloy
+
+                cat > /opt/alloy/config.alloy <<'ALLOY'
+                logging {
+                  level  = "info"
+                  format = "logfmt"
+                }
+
+                discovery.docker "containers" {
+                  host = "unix:///var/run/docker.sock"
+                }
+
+                loki.write "default" {
+                  endpoint {
+                    url = "http://10.0.2.10:3100/loki/api/v1/push"
+                  }
+                }
+
+                loki.source.docker "containers" {
+                  host    = "unix:///var/run/docker.sock"
+                  targets = discovery.docker.containers.targets
+
+                  labels = {
+                    host = "app-ec2",
+                    env  = "staging",
+                  }
+
+                  forward_to = [loki.write.default.receiver]
+                }
+
+                loki.source.journal "system" {
+                  max_age = "24h"
+
+                  labels = {
+                    host = "app-ec2",
+                    env  = "staging",
+                    type = "system",
+                  }
+
+                  forward_to = [loki.write.default.receiver]
+                }
+                ALLOY
+
+                docker pull grafana/alloy:v1.19.0
+
+                docker rm -f alloy 2>/dev/null || true
+
+                docker run -d \
+                  --name alloy \
+                  --restart unless-stopped \
+                  -v /opt/alloy/config.alloy:/etc/alloy/config.alloy:ro \
+                  -v /var/run/docker.sock:/var/run/docker.sock \
+                  -v /run/log/journal:/run/log/journal:ro \
+                  -v /var/log/journal:/var/log/journal:ro \
+                  -v /etc/machine-id:/etc/machine-id:ro \
+                  grafana/alloy:v1.19.0 \
+                  run \
+                  --storage.path=/var/lib/alloy/data \
+                  --disable-reporting \
+                  /etc/alloy/config.alloy
+              EOF
 
   tags = {
     Project     = var.project_name
