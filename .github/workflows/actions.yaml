@@ -103,7 +103,7 @@ jobs:
                 -e PG_USER=$(echo $SECRET | jq -r .PG_USER) \
                 -e PG_PASSWORD=$(echo $SECRET | jq -r .PG_PASSWORD) \
                 -e PG_HOST=$(echo $SECRET | jq -r .PG_HOST) \
-                -e PG_SSL=$(echo $SECRET | jq -r .PG_SSL) \
+                -e PG_SSL=true \
                 <your-ecr-image>:${{ github.sha }}"
               ]' \
               --region us-east-1 \
