@@ -50,7 +50,7 @@ resource "aws_iam_role_policy" "github_actions" {
           "ecr:PutImage"
         ]
         Resource = aws_ecr_repository.app_repo.arn
-      }    
+      }
     ]
   })
 }
