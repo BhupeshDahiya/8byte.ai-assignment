@@ -34,6 +34,13 @@ resource "aws_iam_role_policy" "ecr_policy" {
         Effect   = "Allow"
         Resource = "*"
       },
+      {
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Effect   = "Allow"
+        Resource = aws_secretsmanager_secret.db_credentials.arn
+      }
     ]
   })
 }

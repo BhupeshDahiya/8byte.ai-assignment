@@ -19,7 +19,7 @@ resource "aws_iam_role" "github_actions" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:BhupeshDahiya/8byte.ai-assignment:*"
+          "token.actions.githubusercontent.com:sub" = "repo:BhupeshDahiya@87353446/8byte.ai-assignment@1353787140:*"
         }
       }
     }]
@@ -36,7 +36,10 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken"
+          "ecr:GetAuthorizationToken",
+          "ssm:SendCommand",
+          "ssm:GetCommandInvocation",
+          "ec2:DescribeInstances"
         ]
         Resource = "*"
       },
