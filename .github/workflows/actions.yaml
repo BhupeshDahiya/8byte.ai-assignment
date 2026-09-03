@@ -65,51 +65,51 @@ jobs:
             ${{ secrets.AWS_ID }}.dkr.ecr.us-east-1.amazonaws.com/app_repo:${{ github.sha }}
 
   deploy-staging:
-      if: github.event_name == 'push'
-      needs: build-push
-      runs-on: ubuntu-latest
-      steps:
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v4
-          with:
-            role-to-assume: arn:aws:iam::${{ secrets.AWS_ID }}:role/github-actions-role
-            aws-region: us-east-1
+    if: github.event_name == 'push'
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ID }}:role/github-actions-role
+          aws-region: us-east-1
 
-        - name: Find instance ID
-          run: |
-            INSTANCE_ID=$(aws ec2 describe-instances \
-              --filters \
-                "Name=tag:Project,Values=8byte-devops-assignment" \
-                "Name=tag:Environment,Values=staging" \
-                "Name=instance-state-name,Values=running" \
-              --query "Reservations[0].Instances[0].InstanceId" \
-              --output text)
+      - name: Find instance ID
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters \
+              "Name=tag:Project,Values=8byte-devops-assignment" \
+              "Name=tag:Environment,Values=staging" \
+              "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
 
-            echo "INSTANCE_ID=$INSTANCE_ID" >> "$GITHUB_ENV"
+          echo "INSTANCE_ID=$INSTANCE_ID" >> "$GITHUB_ENV"
 
-        - name: Deploy to staging
-          run: |
-            COMMAND_ID=$(aws ssm send-command \
-              --instance-ids "$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --parameters 'commands=[
-                "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com",
-                "docker pull '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com/app_repo:'${{ github.sha }}'",
-                "SECRET=$(aws secretsmanager get-secret-value --secret-id 8byte-devops-assignment/staging/db --region us-east-1 --query SecretString --output text)",
-                "docker stop app || true",
-                "docker rm app || true",
-                "docker run -d --name app -p 3000:3000 --restart unless-stopped \
-                -e PG_DB=$(echo $SECRET | jq -r .PG_DB) \
-                -e PG_USER=$(echo $SECRET | jq -r .PG_USER) \
-                -e PG_PASSWORD=$(echo $SECRET | jq -r .PG_PASSWORD) \
-                -e PG_HOST=$(echo $SECRET | jq -r .PG_HOST) \
-                -e PG_SSL=true \
-                <your-ecr-image>:${{ github.sha }}"
-              ]' \
-              --region us-east-1 \
-              --query "Command.CommandId" \
-              --output text)
+      - name: Deploy to staging
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com",
+              "docker pull '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com/app_repo:'${{ github.sha }}'",
+              "SECRET=$(aws secretsmanager get-secret-value --secret-id 8byte-devops-assignment/staging/db --region us-east-1 --query SecretString --output text)",
+              "docker stop app || true",
+              "docker rm app || true",
+              "docker run -d --name app -p 3000:3000 --restart unless-stopped \
+              -e PG_DB=$(echo $SECRET | jq -r .PG_DB) \
+              -e PG_USER=$(echo $SECRET | jq -r .PG_USER) \
+              -e PG_PASSWORD=$(echo $SECRET | jq -r .PG_PASSWORD) \
+              -e PG_HOST=$(echo $SECRET | jq -r .PG_HOST) \
+              -e PG_SSL=true \
+              '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com/app_repo:${{ github.sha }}"
+            ]' \
+            --region us-east-1 \
+            --query "Command.CommandId" \
+            --output text)
 
-            aws ssm wait command-executed \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID"
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
