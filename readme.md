@@ -18,3 +18,5 @@ Added a PostgreSQL healthcheck and changed depends_on in compose file to wait fo
 Actions couldntt configure AWS creds
 ### Solution
 The GitHub Actions OIDC trust policy was initially based on the legacy repository-name subject format. Because the repository was created after GitHub's immutable OIDC subject rollout, the trust policy was updated to use the owner and repository IDs.
+
+### production is currently using the staging EC2 and staging DB secret
