@@ -98,7 +98,13 @@ jobs:
                 "SECRET=$(aws secretsmanager get-secret-value --secret-id 8byte-devops-assignment/staging/db --region us-east-1 --query SecretString --output text)",
                 "docker stop app || true",
                 "docker rm app || true",
-                "docker run -d --name app -p 3000:3000 --restart unless-stopped -e PG_DB=$(echo $SECRET | jq -r .PG_DB) -e PG_USER=$(echo $SECRET | jq -r .PG_USER) -e PG_PASSWORD=$(echo $SECRET | jq -r .PG_PASSWORD) -e PG_HOST=$(echo $SECRET | jq -r .PG_HOST) -e PG_SSL=$(echo $SECRET | jq -r .PG_SSL) '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com/app_repo:'${{ github.sha }}'"
+                "docker run -d --name app -p 3000:3000 --restart unless-stopped \
+                -e PG_DB=$(echo $SECRET | jq -r .PG_DB) \
+                -e PG_USER=$(echo $SECRET | jq -r .PG_USER) \
+                -e PG_PASSWORD=$(echo $SECRET | jq -r .PG_PASSWORD) \
+                -e PG_HOST=$(echo $SECRET | jq -r .PG_HOST) \
+                -e PG_SSL=$(echo $SECRET | jq -r .PG_SSL) \
+                <your-ecr-image>:${{ github.sha }}"
               ]' \
               --region us-east-1 \
               --query "Command.CommandId" \
