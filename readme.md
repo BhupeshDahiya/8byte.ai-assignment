@@ -708,5 +708,3 @@ Prometheus / Grafana
    ↓
 Alloy / Loki
 ```
-
-The primary objective was to build a reproducible, secure and observable deployment while keeping the implementation practical for the assignment's 3-day time limit.
