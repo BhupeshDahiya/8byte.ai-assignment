@@ -12,6 +12,7 @@ on:
         required: false
         default: 'Manual health check'
 
+name: CI/CD pipline
 permissions:
   id-token: write
   contents: read
