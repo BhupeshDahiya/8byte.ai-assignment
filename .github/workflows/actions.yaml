@@ -1,3 +1,4 @@
+name: CI/CD pipline
 on:
   pull_request:
     branches:
@@ -12,7 +13,6 @@ on:
         required: false
         default: 'Manual health check'
 
-name: CI/CD pipline
 permissions:
   id-token: write
   contents: read
@@ -24,7 +24,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      # run only test db and the run jest tests in temp container and delete it
       - name: Run tests
         run: |
           docker compose -f crud-rest-api/docker-compose.test.yml up -d node_db_test 
@@ -32,7 +31,7 @@ jobs:
 
       - name: Dependency vulnerability scan
         run: |
-          docker compose -f crud-rest-api/docker-compose.test.yml run --rm node_app_test npm audit
+          docker compose -f crud-rest-api/docker-compose.test.yml run --rm node_app_test npm audit --audit-level=high
 
       - name: Cleanup
         if: always()
@@ -46,7 +45,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: config aws creds
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ID }}:role/github-actions-role
@@ -150,7 +149,7 @@ jobs:
           INSTANCE_ID=$(aws ec2 describe-instances \
             --filters \
               "Name=tag:Project,Values=8byte-devops-assignment" \
-              "Name=tag:Environment,Values=staging" \
+              "Name=tag:Environment,Values=production" \
               "Name=instance-state-name,Values=running" \
             --query "Reservations[0].Instances[0].InstanceId" \
             --output text)
@@ -165,7 +164,7 @@ jobs:
             --parameters 'commands=[
               "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com",
               "docker pull '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com/app_repo:'${{ github.sha }}'",
-              "SECRET=$(aws secretsmanager get-secret-value --secret-id 8byte-devops-assignment/staging/db --region us-east-1 --query SecretString --output text)",
+              "SECRET=$(aws secretsmanager get-secret-value --secret-id 8byte-devops-assignment/production/db --region us-east-1 --query SecretString --output text)",
               "docker stop app || true",
               "docker rm app || true",
               "docker run -d --name app -p 3000:3000 --restart unless-stopped -e PG_DB=$(echo $SECRET | jq -r .PG_DB) -e PG_USER=$(echo $SECRET | jq -r .PG_USER) -e PG_PASSWORD=$(echo $SECRET | jq -r .PG_PASSWORD) -e PG_HOST=$(echo $SECRET | jq -r .PG_HOST) -e PG_SSL=true '${{ secrets.AWS_ID }}'.dkr.ecr.us-east-1.amazonaws.com/app_repo:'${{ github.sha }}'"
