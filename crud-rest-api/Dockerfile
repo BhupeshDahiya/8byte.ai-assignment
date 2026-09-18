@@ -1,15 +1,11 @@
 FROM node:lts-trixie-slim
-
-# create app directory
 WORKDIR /app
-
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-RUN npm install
-
-# bundle app source
 COPY . .
 
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+USER appuser
 EXPOSE 3000
-
 CMD ["node", "index.js"]
